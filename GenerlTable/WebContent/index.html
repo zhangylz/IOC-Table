@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>TableDemo</title>
+</head>
+<body>
+
+	<button id="addRow">增加行</button>
+	<button id="resetButton">删除新增的行</button>
+	<table id="childTable">
+		
+
+	</table>
+	<table id="testTable">
+		
+
+	</table>
+	<button id="showData">Data</button>
+
+	<script src="js/jquery-3.1.1.min.js"></script>
+	<script>
+
+		$(document).ready(function(){
+
+			var str = "";
+			var ths = [];
+			var count = 0;
+			var attribute = 0;
+
+			var table = $("#childTable");
+			var test = $("#testTable");
+
+			//初始化表单
+			$.post("TableServlet",{"type":"initTable"},function(data){
+                ths = data.split(",");
+				var $tr = $("<tr>");
+				for(var i=0;i < ths.length;i ++){
+					var $th = $("<th>" + ths[i] + "</th>");
+					$tr.append($th);
+				}
+				$tr.append($("</tr>"));
+				table.append($tr);
+				test.append($tr);
+			});
+			//表单初始化完成
+
+			$("#addRow").click(function(){
+
+				var $tr = $("<tr id='tr" + count + "'>");
+				for(var i = 0;i < ths.length;i ++){
+					var type = 'text';
+					if(ths[i] == '日期'){
+						type = 'date'
+					}
+					var $td = $("<td><input type='" + type + "' value='" + ths[i] + "：' id=attribute" + count + attribute + "></td>");
+					$tr.append($td);
+					attribute ++;
+				}
+
+				$tr.append($("</tr>"));
+				table.append($tr);
+
+				count ++;
+				attribute = 0;
+
+			});
+
+			
+
+			$("#showData").click(function(){
+
+				var jsonData = [];
+				for(var i = 0;i < count ;i ++){
+					var obj = new Object();
+					for(var j = 0;j < ths.length;j ++){
+						var attr = $("#attribute" + i + j).val();
+						obj["attribute" + j] = attr;
+					}
+					jsonData[i] = obj;
+				}
+				var jsonStr = JSON.stringify(jsonData);
+				console.log(jsonStr);
+				//交互
+				$.post("TableServlet",{"type":"saveData","jsonData":jsonStr},function(data){
+					//初始化表单数据
+					var dataList = JSON.parse(data);
+					for(var i = 0;i < dataList.length;i ++){
+						var obj = dataList[i];
+						var $tr = $("<tr id='tr" + count + "'>");
+						for(var j = 0;j < ths.length;j ++){
+							var $td = $("<td><input type='text' value='" + obj["attribute" + j] + "' id=attribute" + count + attribute + "></td>");
+							$tr.append($td);
+						}
+						$tr.append($("</tr>"));
+						test.append($tr);
+					}
+				});
+			});
+
+			$("#resetButton").click(function(){
+				var temp = count - 1;
+				var tr = $("#tr" + temp);
+				tr.remove();
+				count --;
+			});
+
+		});
+
+		
+	</script>
+
+</body>
+</html>
